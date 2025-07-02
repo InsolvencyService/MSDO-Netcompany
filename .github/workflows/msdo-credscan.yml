@@ -1,0 +1,113 @@
+name: msdo-secret-scanning-credscan 
+
+on:
+  workflow_call:
+    secrets:
+      GH_TOKEN:
+        required: false
+  workflow_dispatch:
+
+jobs:
+  secret-scan:
+    name: MSDO Secret Scan
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository manually
+        run: |
+          git clone https://github.com/${{ github.repository }} .
+          git checkout ${{ github.ref_name }}
+
+      - name: Inject .gdnsettings to support secrets detection in Terraform, Bicep, ARM, Python, and YAML
+        run: |
+          mkdir -p .gdn
+          cat <<EOF > .gdn/.gdnsettings
+          {
+            "version": "1.0",
+            "fileFiltering": {
+              "filePathIncludes": [
+                "**/*.tf",
+                "**/*.tfvars",
+                "**/*.bicep",
+                "**/*.json",
+                "**/*template*.json",
+                "**/*.py",
+                "**/*.yml",
+                "**/*.yaml"
+              ],
+              "fileNameExcludes": [],
+              "filePathExcludes": []
+            },
+            "toolConfigurations": {
+              "credscan": {
+                "enabled": true,
+                "parameters": {
+                  "scanUnknownExtensions": true,
+                  "scanAllFiles": true,
+                  "severity": "low"
+                }
+              }
+            },
+            "break": {
+              "policies": [
+                {
+                  "tool": "credscan",
+                  "minimumSeverity": "low"
+                }
+              ]
+            }
+          }
+          EOF
+
+      - name: Set tool to only run secret scan
+        run: echo "TOOLS=credscan" >> $GITHUB_ENV
+
+      - name: Install .NET 6 SDK (for CredScan)
+        run: |
+          wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+          chmod +x dotnet-install.sh
+          ./dotnet-install.sh --version 6.0.415 --install-dir "$HOME/dotnet"
+
+          echo "DOTNET_ROOT=$HOME/dotnet" >> $GITHUB_ENV
+          echo "$HOME/dotnet" >> $GITHUB_PATH
+
+      - name: Run Microsoft Security DevOps - Secret Scan
+        uses: theangrytech-git/security-devops-action@main
+        id: msdo
+        with:
+          tools: ${{ env.TOOLS }}
+
+      # Commented out unless we want to use GHAS and store finding in GitHub Security
+      # - name: Upload SARIF to GitHub Code Scanning
+      #   if: github.repository_visibility == 'public'
+      #   run: |
+      #     echo "Compressing and uploading SARIF..."
+      #     sarif_file="${{ steps.msdo.outputs.sarifFile }}"
+      #     if [ ! -f "$sarif_file" ]; then
+      #       echo "SARIF file not found at $sarif_file"
+      #       exit 0
+      #     fi
+
+      #     gzip -c "$sarif_file" | base64 -w 0 > msdo.sarif.base64
+      #     encoded_sarif=$(cat msdo.sarif.base64)
+
+      #     curl -s -X POST \
+      #       -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+      #       -H "Accept: application/vnd.github+json" \
+      #       -H "Content-Type: application/json" \
+      #       https://api.github.com/repos/${{ github.repository }}/code-scanning/sarifs \
+      #       -d @- <<EOF
+      #     {
+      #     "commit_sha": "${{ github.sha }}",
+      #     "ref": "${{ github.ref }}",
+      #     "sarif": "$encoded_sarif",
+      #     "checkout_uri": "https://github.com/${{ github.repository }}",
+      #     "tool_name": "MSDO-CredScan"
+      #     }
+      #     EOF
