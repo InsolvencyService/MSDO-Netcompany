@@ -1,16 +1,23 @@
 name: msdo-dynamic-scanning
 
+# on:
+#   workflow_dispatch:
+#   workflow_call:
+#     inputs:
+#       branch:
+#         required: false
+#         type: string
+#         default: 'develop'
+#     secrets:
+#       GH_TOKEN:
+#         required: false
+
 on:
-  workflow_dispatch:
   workflow_call:
-    inputs:
-      branch:
-        required: false
-        type: string
-        default: 'develop'
     secrets:
       GH_TOKEN:
         required: false
+  workflow_dispatch:
 
 jobs:
   msdo:
