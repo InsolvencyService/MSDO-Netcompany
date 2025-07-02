@@ -1,0 +1,74 @@
+name: msdo-secret-scanning-gitleaks
+
+on:
+  workflow_call:
+    secrets:
+      GH_TOKEN:
+        required: false
+  workflow_dispatch:
+
+jobs:
+  gitleaks-scan:
+    name: Gitleaks Secret Scan
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository manually
+        run: |
+          git clone https://github.com/${{ github.repository }} .
+          git checkout ${{ github.ref_name }}
+
+      - name: Fetch Gitleaks config from MSDO
+        run: |
+          echo "Fetching .gitleaks.toml from MSDO repo..."
+          curl -sSL https://raw.githubusercontent.com/InsolvencyService/MSDO-Netcompany/main/gitleaks.toml -o .gitleaks.toml
+
+      - name: Run Gitleaks
+        run: |
+          echo "Downloading Gitleaks..."
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          chmod +x gitleaks
+          ./gitleaks version
+
+          echo " Running Gitleaks scan..."
+          ./gitleaks detect \
+          --source=. \
+          --config=.gitleaks.toml \
+          --report-format sarif \
+          --report-path=gitleaks.sarif \
+          --exit-code 0
+
+      # Commented out unless we want to use GHAS and store finding in GitHub Security
+      # - name: Upload SARIF to GitHub Code Scanning
+      #   if: github.repository_visibility == 'public'
+      #   run: |
+      #     echo "Compressing and uploading SARIF..."
+      #     if [ ! -f "gitleaks.sarif" ]; then
+      #       echo "SARIF file not found"
+      #       exit 0
+      #     fi
+
+      #     gzip -c gitleaks.sarif | base64 -w 0 > gitleaks.sarif.base64
+      #     encoded_sarif=$(cat gitleaks.sarif.base64)
+
+      #     curl -s -X POST \
+      #       -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+      #       -H "Accept: application/vnd.github+json" \
+      #       -H "Content-Type: application/json" \
+      #       https://api.github.com/repos/${{ github.repository }}/code-scanning/sarifs \
+      #       -d @- <<EOF
+      #     {
+      #       "commit_sha": "${{ github.sha }}",
+      #       "ref": "${{ github.ref }}",
+      #       "sarif": "$encoded_sarif",
+      #       "checkout_uri": "https://github.com/${{ github.repository }}",
+      #       "tool_name": "Gitleaks"
+      #     }
+      #     EOF
