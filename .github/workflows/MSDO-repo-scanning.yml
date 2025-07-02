@@ -14,7 +14,7 @@ permissions:
 jobs:
   run-msdo-scan:
     name: Full MSDO Scan
-    uses: InsolvencyService/MSDO-Netcompany/blob/main/.github/workflows/MSDO-main-pipeline.yml@main 
+    uses: InsolvencyService/MSDO-Netcompany/.github/workflows/MSDO-main-pipeline.yml@main 
     with:
       branch: ${{ github.ref_name }}
     secrets:
