@@ -1,4 +1,4 @@
-name: msdo-central-scanning
+name: msdo-dynamic-scanning
 
 on:
   workflow_dispatch:
