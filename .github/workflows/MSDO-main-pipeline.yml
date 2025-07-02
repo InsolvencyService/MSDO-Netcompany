@@ -2,10 +2,14 @@ name: msdo-main-pipeline
 
 on:
   workflow_call:
+    inputs:
+      branch:
+        required: false
+        type: string
+        default: 'main' # Will need changing to Develop
     secrets:
       GH_TOKEN:
         required: false
-  workflow_dispatch:
 
 jobs:
   # msdo-dynamic-scanning:
