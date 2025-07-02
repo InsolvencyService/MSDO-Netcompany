@@ -1,0 +1,54 @@
+name: msdo-main-pipeline
+
+on:
+  workflow_call:
+    secrets:
+      GH_TOKEN:
+        required: false
+  workflow_dispatch:
+
+jobs:
+  # msdo-dynamic-scanning:
+  #   uses: ./.github/workflows/MSDO-dynamic-scanning.yml
+  #   permissions:
+  #     contents: read
+  #     id-token: write
+  #     actions: read
+  #     security-events: write
+  #   with:
+  #     branch: ${{ inputs.branch }}
+  #   secrets:
+  #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  secret-scan-credscan:
+    uses: ./.github/workflows/MSDO-credscan.yml
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+      security-events: write
+    #needs: msdo-dynamic-scanning Uncomment once template-scanning is needed
+    secrets:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  secret-scan-trufflehog:
+    uses: ./.github/workflows/MSDO-trufflehog.yml
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+      security-events: write
+    needs: secret-scan-credscan
+    secrets:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  secret-scan-gitleaks:
+    uses: ./.github/workflows/MSDO-gitleaks.yml
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+      security-events: write
+    needs: secret-scan-trufflehog
+    secrets:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
