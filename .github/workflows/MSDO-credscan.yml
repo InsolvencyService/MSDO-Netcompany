@@ -82,7 +82,7 @@ jobs:
           echo "$HOME/dotnet" >> $GITHUB_PATH
 
       - name: Run Microsoft Security DevOps - Secret Scan
-        uses: ./.github/actions/security-devops-action@main
+        uses: ./.github/actions/security-devops-action
         id: msdo
         with:
           tools: ${{ env.TOOLS }}
