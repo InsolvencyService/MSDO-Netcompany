@@ -1,4 +1,4 @@
-name: msdo-secret-scanning-credscan 
+name: msdo-secret-scanning-credscan
 
 on:
   workflow_call:
@@ -82,7 +82,7 @@ jobs:
           echo "$HOME/dotnet" >> $GITHUB_PATH
 
       - name: Run Microsoft Security DevOps - Secret Scan
-        uses: theangrytech-git/security-devops-action@main
+        uses: ./.github/actions/security-devops-action@main
         id: msdo
         with:
           tools: ${{ env.TOOLS }}
