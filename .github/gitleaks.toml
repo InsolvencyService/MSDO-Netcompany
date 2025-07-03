@@ -1,0 +1,126 @@
+title = "Gitleaks config for MSDO repos"
+description = "Targets JS, Terraform, Python, Cloud configs, AWS and Azure secrets, and Git metadata"
+version = "2"
+redact = false  # Show actual secrets in alerts
+
+[config]
+logLevel = "INFO"
+
+# Scan these specific file types
+[[config.pathAllowlist]]
+description = "Only scan selected file extensions"
+regexes = [
+  ".*\\.js$",
+  ".*\\.jsx$",
+  ".*\\.ts$",
+  ".*\\.tsx$",
+  ".*\\.exe$",
+  ".*\\.dll$",
+  ".*\\.py$",
+  ".*\\.tf$",
+  ".*\\.json$",
+  ".*\\.yml$",
+  ".*\\.yaml$",
+  ".*\\.dockerfile$",
+  ".*\\.template$",
+  ".*\\.bicep$"
+]
+
+##########################
+# Common Secret Rules
+##########################
+
+[[rules]]
+id = "aws-access-key"
+description = "AWS Access Key"
+regex = '''(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}'''
+tags = ["AWS", "key"]
+
+[[rules]]
+id = "aws-secret-key"
+description = "AWS Secret Access Key"
+regex = '''(?i)aws(.{0,20})?(secret|access)?(.{0,20})?['\"=:\s]{1,10}[0-9a-zA-Z/+]{40}'''
+tags = ["AWS", "secret"]
+
+[[rules]]
+id = "azure-client-secret"
+description = "Azure Client Secret"
+regex = '''(?i)(azure)?.*(client)?.*(secret)[\"'=:\s]{1,10}[0-9a-zA-Z\-_.]{20,100}'''
+tags = ["Azure", "secret"]
+
+[[rules]]
+id = "azure-storage-key"
+description = "Azure Storage Account Key"
+regex = '''(?i)(DefaultEndpointsProtocol=.*;AccountName=.*;AccountKey=.*;EndpointSuffix=.*)'''
+tags = ["Azure", "storage"]
+
+[[rules]]
+id = "terraform-password"
+description = "Hardcoded password in Terraform or cloud config"
+regex = '''(?i)(administrator_login_password|password)[^=:.]{0,20}[:=][ \t]*["']?[a-z0-9=_\-]{8,45}["']?'''
+tags = ["terraform", "password"]
+
+[[rules]]
+id = "jwt-token"
+description = "JWT Token"
+regex = '''\beyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+'''
+tags = ["token", "jwt"]
+
+[[rules]]
+id = "generic-secret"
+description = "Generic token/password/apiKey"
+regex = '''(?i)(key|api|token|secret|client|passwd|password|auth|access)[^=:.]{0,20}[:=][ \t]*["']?[a-z0-9-_]{10,150}["']?'''
+tags = ["generic", "secret"]
+
+[[rules]]
+id = "private-key"
+description = "Private Key"
+regex = '''-----BEGIN( RSA| DSA| EC)? PRIVATE KEY-----'''
+tags = ["key", "private"]
+
+[[rules]]
+id = "github-pat"
+description = "GitHub Personal Access Token"
+regex = '''gh[pousr]_[A-Za-z0-9_]{36}'''
+tags = ["github", "token"]
+
+[[rules]]
+id = "slack-webhook"
+description = "Slack Webhook URL"
+regex = '''https://hooks.slack.com/services/T[A-Z0-9]{8}/B[A-Z0-9]{8}/[a-zA-Z0-9]{24}'''
+tags = ["slack", "webhook"]
+
+##########################
+# Git Metadata Rules
+##########################
+
+[[rules]]
+id = "git-commit-email"
+description = "Exposed Git email in commit"
+regex = '''[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'''
+tags = ["git", "email"]
+entropy = false
+
+[[rules]]
+id = "git-author-name"
+description = "Git author name (example detection)"
+regex = '''(?i)(author|committer):\s*["']?([a-z0-9_\- ]{3,})["']?'''
+tags = ["git", "name"]
+entropy = false
+
+##########################
+# Allowlist false positives
+##########################
+
+# description = "Ignore known non-sensitive files"
+[allowlist]
+files = [
+  "test/",
+  "tests/",
+  "docs/",
+  ".github/",
+  "README.md"
+]
+regexes = [
+  "dummy_[a-zA-Z0-9]{10,}"
+]
