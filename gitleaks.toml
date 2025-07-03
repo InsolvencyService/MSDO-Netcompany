@@ -112,8 +112,8 @@ entropy = false
 # Allowlist false positives
 ##########################
 
+# description = "Ignore known non-sensitive files"
 [allowlist]
-description = "Ignore known non-sensitive files"
 files = [
   "test/",
   "tests/",
