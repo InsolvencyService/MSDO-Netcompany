@@ -31,7 +31,7 @@ jobs:
       - name: Fetch Gitleaks config from MSDO
         run: |
           echo "Downloading .gitleaks.toml using GitHub API..."
-          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          curl -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
                -H "Accept: application/vnd.github.v3.raw" \
                -L \
                https://api.github.com/repos/InsolvencyService/MSDO-Netcompany/contents/gitleaks.toml \
