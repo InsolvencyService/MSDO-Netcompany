@@ -27,6 +27,6 @@ outputs:
     description: A file path to a SARIF results file.
 runs:
   using: 'node20'
-  main: 'lib/main.js'
-  pre: 'lib/pre.js'
-  post: 'lib/post.js'
+  main: 'dist/main.js'
+  pre: 'dist/pre.js'
+  post: 'dist/post.js'
