@@ -31,7 +31,12 @@ jobs:
       - name: Fetch Gitleaks config from MSDO
         run: |
           echo "Fetching .gitleaks.toml from MSDO repo..."
-          curl -sSL https://raw.githubusercontent.com/InsolvencyService/MSDO-Netcompany/main/gitleaks.toml -o .gitleaks.toml
+          curl -fSL https://raw.githubusercontent.com/InsolvencyService/MSDO-Netcompany/main/gitleaks.toml -o .gitleaks.toml
+
+      - name: Show gitleaks config
+        run: |
+          echo "Gitleaks config contents:"
+          cat .gitleaks.toml
 
       - name: Run Gitleaks
         run: |
