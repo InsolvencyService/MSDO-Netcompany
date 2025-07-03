@@ -34,7 +34,7 @@ jobs:
             curl -sSL -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
                  -H "Accept: application/vnd.github.v3.raw" \
                  -L \
-                 https://api.github.com/repos/InsolvencyService/MSDO-Netcompany/contents/gitleaks.toml?ref=main \
+                 https://api.github.com/repos/InsolvencyService/MSDO-Netcompany/contents/.github/gitleaks.toml?ref=main \
                  -o .gitleaks.toml
 
       - name: Show gitleaks config
