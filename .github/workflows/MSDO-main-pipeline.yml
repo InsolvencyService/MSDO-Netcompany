@@ -26,6 +26,8 @@ jobs:
 
   secret-scan-credscan:
     uses: ./.github/workflows/MSDO-credscan.yml
+    with:
+      branch: ${{ inputs.branch }}
     permissions:
       contents: read
       id-token: write
@@ -37,6 +39,8 @@ jobs:
 
   secret-scan-trufflehog:
     uses: ./.github/workflows/MSDO-trufflehog.yml
+    with:
+      branch: ${{ inputs.branch }}
     permissions:
       contents: read
       id-token: write
@@ -48,6 +52,8 @@ jobs:
 
   secret-scan-gitleaks:
     uses: ./.github/workflows/MSDO-gitleaks.yml
+    with:
+      branch: ${{ inputs.branch }}
     permissions:
       contents: read
       id-token: write
