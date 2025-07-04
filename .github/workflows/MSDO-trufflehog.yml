@@ -124,21 +124,24 @@ jobs:
 
           python3 convert_to_sarif.py
 
-      - name: Install .NET 6 SDK & MSDO CLI
+      - name: Install .NET 6 SDK & Microsoft Security DevOps CLI
         run: |
           wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
           chmod +x dotnet-install.sh
           ./dotnet-install.sh --version 6.0.415 --install-dir "$HOME/dotnet"
           echo "DOTNET_ROOT=$HOME/dotnet" >> $GITHUB_ENV
           echo "$HOME/dotnet" >> $GITHUB_PATH
-          $HOME/dotnet/dotnet tool install --tool-path . microsoft.security.devops.cli
+          export PATH="$HOME/dotnet:$PATH"
+
+          $HOME/dotnet/dotnet new tool-manifest
+          $HOME/dotnet/dotnet tool install microsoft.security.devops.cli --version 0.215.0
 
       - name: Import and Upload SARIF to Microsoft Defender for DevOps
         run: |
           mkdir -p .gdn
           echo '{}' > .gdn/.gdnsettings
-          ./msdo guardian import --tool trufflehog --file trufflehog.sarif
-          ./msdo guardian upload --github
+          $HOME/dotnet/dotnet msdo guardian import --tool trufflehog --file trufflehog.sarif
+          $HOME/dotnet/dotnet msdo guardian upload --github
 
       # Commented out unless we want to use GHAS and store finding in GitHub Security
       # - name: Convert TruffleHog findings to SARIF format
