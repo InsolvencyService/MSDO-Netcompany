@@ -60,7 +60,6 @@ jobs:
             -x exclude-paths.txt \
             > trufflehog-findings.json || true
 
-      Commented out unless we want to use GHAS and store finding in GitHub Security
       - name: Convert TruffleHog findings to SARIF format
         if: github.repository_visibility == 'public'
         run: |
@@ -119,7 +118,7 @@ jobs:
           echo "  json.dump(sarif, out)" >> convert_to_sarif.py
 
           python3 convert_to_sarif.py
-
+      # Commented out unless we want to use GHAS and store finding in GitHub Security
       # - name: Upload TruffleHog SARIF to GitHub Code Scanning
       #   if: github.repository_visibility == 'public'
       #   run: |
