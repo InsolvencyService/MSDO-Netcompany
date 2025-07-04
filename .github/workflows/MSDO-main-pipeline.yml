@@ -12,6 +12,7 @@ on:
         required: false
 
 jobs:
+  # Uncomment once template-scanning is needed
   # msdo-dynamic-scanning:
   #   uses: ./.github/workflows/MSDO-dynamic-scanning.yml
   #   permissions:
@@ -37,18 +38,19 @@ jobs:
     secrets:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-  secret-scan-trufflehog:
-    uses: ./.github/workflows/MSDO-trufflehog.yml
-    with:
-      branch: ${{ inputs.branch }}
-    permissions:
-      contents: read
-      id-token: write
-      actions: read
-      security-events: write
-    needs: secret-scan-credscan
-    secrets:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  # Uncomment once GHAS is enabled
+  # secret-scan-trufflehog:
+  #   uses: ./.github/workflows/MSDO-trufflehog.yml
+  #   with:
+  #     branch: ${{ inputs.branch }}
+  #   permissions:
+  #     contents: read
+  #     id-token: write
+  #     actions: read
+  #     security-events: write
+  #   needs: secret-scan-credscan
+  #   secrets:
+  #     GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   secret-scan-gitleaks:
     uses: ./.github/workflows/MSDO-gitleaks.yml
@@ -59,6 +61,6 @@ jobs:
       id-token: write
       actions: read
       security-events: write
-    needs: secret-scan-trufflehog
+    needs: secret-scan-credscan
     secrets:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
