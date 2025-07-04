@@ -106,8 +106,8 @@ jobs:
         run: |
           mkdir -p .gdn
           echo '{}' > .gdn/.gdnsettings
-          ./msdo guardian import --tool trufflehog --file trufflehog.sarif
-          ./msdo guardian upload --github
+          ./msdo-bin/msdo guardian import --tool trufflehog --file trufflehog.sarif
+          ./msdo-bin/msdo guardian upload --github
 
       # Commented out unless we want to use GHAS and store finding in GitHub Security
       # - name: Convert TruffleHog findings to SARIF format
