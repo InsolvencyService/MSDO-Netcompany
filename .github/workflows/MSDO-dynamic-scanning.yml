@@ -103,6 +103,8 @@ jobs:
         id: msdo
         with:
           tools: ${{ env.TOOLS }}
+          GDN_LOGLEVEL: debug   # Set to 'debug' for detailed logs, can be set to 'info' or 'error' for less verbosity
+          ACTIONS_STEP_DEBUG: true    # Enable step debug logging
 
       # Commented out unless we want to use GHAS and store finding in GitHub Security
       # - name: Check Repository Visibility

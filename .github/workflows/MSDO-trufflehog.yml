@@ -57,6 +57,8 @@ jobs:
           find . -type f \( -name "*.tf" -o -name "*.tfvars" -o -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.py" -o -name "*.json" -o -name "*.yml" -o -name "*.yaml" -o -name "*.bicep" -o -name "*.cs" -o -name "*.csproj" \)
 
       - name: Run TruffleHog and generate JSON report
+        env:
+          ACTIONS_STEP_DEBUG: true
         run: |
           echo "\.terraform\.lock\.hcl$" > exclude-paths.txt
           trufflehog filesystem . \
