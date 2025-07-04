@@ -10,7 +10,6 @@ on:
     secrets:
       GH_TOKEN:
         required: false
-  workflow_dispatch:
 
 jobs:
   trufflehog-scan:
@@ -35,8 +34,9 @@ jobs:
       - name: Install TruffleHog (v3+ CLI)
         run: |
           echo "Fetching latest TruffleHog release asset for Linux..."
-          ASSET_URL=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/trufflesecurity/trufflehog/releases/latest \
-          | jq -r '.assets[] | select(.name | test("linux_amd64.tar.gz$")) | .browser_download_url')
+
+          ASSET_URL=$(curl -s https://api.github.com/repos/trufflesecurity/trufflehog/releases/latest \
+            | jq -r '.assets[] | select(.name | test("linux_amd64.tar.gz$")) | .browser_download_url')
 
           if [ -z "$ASSET_URL" ]; then
             echo "Could not find Linux binary asset for TruffleHog. Exiting."
@@ -47,6 +47,7 @@ jobs:
           curl -sSL -o trufflehog.tar.gz "$ASSET_URL"
           tar -xzf trufflehog.tar.gz
           chmod +x trufflehog
+          file trufflehog
           sudo mv trufflehog /usr/local/bin/
           trufflehog --version
 
@@ -56,6 +57,8 @@ jobs:
           find . -type f \( -name "*.tf" -o -name "*.tfvars" -o -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.py" -o -name "*.json" -o -name "*.yml" -o -name "*.yaml" -o -name "*.bicep" -o -name "*.cs" -o -name "*.csproj" \)
 
       - name: Run TruffleHog and generate JSON report
+        env:
+          ACTIONS_STEP_DEBUG: true
         run: |
           echo "\.terraform\.lock\.hcl$" > exclude-paths.txt
           trufflehog filesystem . \
@@ -63,65 +66,66 @@ jobs:
             -x exclude-paths.txt \
             > trufflehog-findings.json || true
 
-      - name: Convert TruffleHog findings to SARIF format
-        if: github.repository_visibility == 'public'
-        run: |
-          echo "import json" > convert_to_sarif.py
-          echo "" >> convert_to_sarif.py
-          echo "try:" >> convert_to_sarif.py
-          echo "  with open('trufflehog-findings.json') as f:" >> convert_to_sarif.py
-          echo "    findings = [json.loads(line) for line in f if line.strip()]" >> convert_to_sarif.py
-          echo "except Exception as e:" >> convert_to_sarif.py
-          echo "  print('Failed to parse findings:', e)" >> convert_to_sarif.py
-          echo "  findings = []" >> convert_to_sarif.py
-          echo "" >> convert_to_sarif.py
-          echo "sarif = {" >> convert_to_sarif.py
-          echo "  'version': '2.1.0'," >> convert_to_sarif.py
-          echo "  'runs': [{" >> convert_to_sarif.py
-          echo "    'tool': {" >> convert_to_sarif.py
-          echo "      'driver': {" >> convert_to_sarif.py
-          echo "        'name': 'TruffleHog'," >> convert_to_sarif.py
-          echo "        'informationUri': 'https://github.com/trufflesecurity/trufflehog'," >> convert_to_sarif.py
-          echo "        'rules': []" >> convert_to_sarif.py
-          echo "      }" >> convert_to_sarif.py
-          echo "    }," >> convert_to_sarif.py
-          echo "    'results': []" >> convert_to_sarif.py
-          echo "  }]" >> convert_to_sarif.py
-          echo "}" >> convert_to_sarif.py
-          echo "" >> convert_to_sarif.py
-          echo "seen_rules = set()" >> convert_to_sarif.py
-          echo "" >> convert_to_sarif.py
-          echo "for finding in findings:" >> convert_to_sarif.py
-          echo "  reason = finding.get('reason', 'Secret detected')" >> convert_to_sarif.py
-          echo "  path = finding.get('path', '')" >> convert_to_sarif.py
-          echo "  line = finding.get('line', 1)" >> convert_to_sarif.py
-          echo "  strings_found = ', '.join(finding.get('stringsFound', []))" >> convert_to_sarif.py
-          echo "  rule_id = f'trufflehog-{reason.replace(\" \", \"-\")[:64]}'" >> convert_to_sarif.py
-          echo "  if rule_id not in seen_rules:" >> convert_to_sarif.py
-          echo "    sarif['runs'][0]['tool']['driver']['rules'].append({" >> convert_to_sarif.py
-          echo "      'id': rule_id," >> convert_to_sarif.py
-          echo "      'name': reason" >> convert_to_sarif.py
-          echo "    })" >> convert_to_sarif.py
-          echo "    seen_rules.add(rule_id)" >> convert_to_sarif.py
-          echo "  sarif['runs'][0]['results'].append({" >> convert_to_sarif.py
-          echo "    'ruleId': rule_id," >> convert_to_sarif.py
-          echo "    'level': 'warning'," >> convert_to_sarif.py
-          echo "    'message': {" >> convert_to_sarif.py
-          echo "      'text': f'{reason} in {path} at line {line}: {strings_found}'" >> convert_to_sarif.py
-          echo "    }," >> convert_to_sarif.py
-          echo "    'locations': [{" >> convert_to_sarif.py
-          echo "      'physicalLocation': {" >> convert_to_sarif.py
-          echo "        'artifactLocation': { 'uri': path }," >> convert_to_sarif.py
-          echo "        'region': { 'startLine': line }" >> convert_to_sarif.py
-          echo "      }" >> convert_to_sarif.py
-          echo "    }]" >> convert_to_sarif.py
-          echo "  })" >> convert_to_sarif.py
-          echo "" >> convert_to_sarif.py
-          echo "with open('trufflehog.sarif', 'w') as out:" >> convert_to_sarif.py
-          echo "  json.dump(sarif, out)" >> convert_to_sarif.py
-
-          python3 convert_to_sarif.py
       # Commented out unless we want to use GHAS and store finding in GitHub Security
+      # - name: Convert TruffleHog findings to SARIF format
+      #   if: github.repository_visibility == 'public'
+      #   run: |
+      #     echo "import json" > convert_to_sarif.py
+      #     echo "" >> convert_to_sarif.py
+      #     echo "try:" >> convert_to_sarif.py
+      #     echo "  with open('trufflehog-findings.json') as f:" >> convert_to_sarif.py
+      #     echo "    findings = [json.loads(line) for line in f if line.strip()]" >> convert_to_sarif.py
+      #     echo "except Exception as e:" >> convert_to_sarif.py
+      #     echo "  print('Failed to parse findings:', e)" >> convert_to_sarif.py
+      #     echo "  findings = []" >> convert_to_sarif.py
+      #     echo "" >> convert_to_sarif.py
+      #     echo "sarif = {" >> convert_to_sarif.py
+      #     echo "  'version': '2.1.0'," >> convert_to_sarif.py
+      #     echo "  'runs': [{" >> convert_to_sarif.py
+      #     echo "    'tool': {" >> convert_to_sarif.py
+      #     echo "      'driver': {" >> convert_to_sarif.py
+      #     echo "        'name': 'TruffleHog'," >> convert_to_sarif.py
+      #     echo "        'informationUri': 'https://github.com/trufflesecurity/trufflehog'," >> convert_to_sarif.py
+      #     echo "        'rules': []" >> convert_to_sarif.py
+      #     echo "      }" >> convert_to_sarif.py
+      #     echo "    }," >> convert_to_sarif.py
+      #     echo "    'results': []" >> convert_to_sarif.py
+      #     echo "  }]" >> convert_to_sarif.py
+      #     echo "}" >> convert_to_sarif.py
+      #     echo "" >> convert_to_sarif.py
+      #     echo "seen_rules = set()" >> convert_to_sarif.py
+      #     echo "" >> convert_to_sarif.py
+      #     echo "for finding in findings:" >> convert_to_sarif.py
+      #     echo "  reason = finding.get('reason', 'Secret detected')" >> convert_to_sarif.py
+      #     echo "  path = finding.get('path', '')" >> convert_to_sarif.py
+      #     echo "  line = finding.get('line', 1)" >> convert_to_sarif.py
+      #     echo "  strings_found = ', '.join(finding.get('stringsFound', []))" >> convert_to_sarif.py
+      #     echo "  rule_id = f'trufflehog-{reason.replace(\" \", \"-\")[:64]}'" >> convert_to_sarif.py
+      #     echo "  if rule_id not in seen_rules:" >> convert_to_sarif.py
+      #     echo "    sarif['runs'][0]['tool']['driver']['rules'].append({" >> convert_to_sarif.py
+      #     echo "      'id': rule_id," >> convert_to_sarif.py
+      #     echo "      'name': reason" >> convert_to_sarif.py
+      #     echo "    })" >> convert_to_sarif.py
+      #     echo "    seen_rules.add(rule_id)" >> convert_to_sarif.py
+      #     echo "  sarif['runs'][0]['results'].append({" >> convert_to_sarif.py
+      #     echo "    'ruleId': rule_id," >> convert_to_sarif.py
+      #     echo "    'level': 'warning'," >> convert_to_sarif.py
+      #     echo "    'message': {" >> convert_to_sarif.py
+      #     echo "      'text': f'{reason} in {path} at line {line}: {strings_found}'" >> convert_to_sarif.py
+      #     echo "    }," >> convert_to_sarif.py
+      #     echo "    'locations': [{" >> convert_to_sarif.py
+      #     echo "      'physicalLocation': {" >> convert_to_sarif.py
+      #     echo "        'artifactLocation': { 'uri': path }," >> convert_to_sarif.py
+      #     echo "        'region': { 'startLine': line }" >> convert_to_sarif.py
+      #     echo "      }" >> convert_to_sarif.py
+      #     echo "    }]" >> convert_to_sarif.py
+      #     echo "  })" >> convert_to_sarif.py
+      #     echo "" >> convert_to_sarif.py
+      #     echo "with open('trufflehog.sarif', 'w') as out:" >> convert_to_sarif.py
+      #     echo "  json.dump(sarif, out)" >> convert_to_sarif.py
+
+      #     python3 convert_to_sarif.py
+
       # - name: Upload TruffleHog SARIF to GitHub Code Scanning
       #   if: github.repository_visibility == 'public'
       #   run: |

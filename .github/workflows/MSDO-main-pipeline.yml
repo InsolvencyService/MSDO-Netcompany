@@ -12,7 +12,6 @@ on:
         required: false
 
 jobs:
-  # Uncomment once template-scanning is needed
   # msdo-dynamic-scanning:
   #   uses: ./.github/workflows/MSDO-dynamic-scanning.yml
   #   permissions:
