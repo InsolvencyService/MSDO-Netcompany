@@ -93,14 +93,14 @@ jobs:
 
           python3 convert_to_sarif.py
 
-      - name: Install Microsoft Security DevOps CLI
+      - name: Install Microsoft Security DevOps CLI (msdo)
         run: |
           echo "Installing Microsoft Security DevOps CLI..."
-          curl -sSL https://aka.ms/msdo-cli/latest/linux-x64 -o msdo.tar.gz
-          mkdir msdo
-          tar -xzf msdo.tar.gz -C msdo
-          chmod +x msdo/msdo
-          echo "$(pwd)/msdo" >> $GITHUB_PATH
+          curl -sSL https://aka.ms/msdo-cli/latest/linux-x64 -o msdo
+          chmod +x msdo
+          mkdir -p msdo-bin
+          mv msdo msdo-bin/msdo
+          echo "$(pwd)/msdo-bin" >> $GITHUB_PATH
 
       - name: Import and Upload SARIF to Microsoft Defender for DevOps
         run: |
