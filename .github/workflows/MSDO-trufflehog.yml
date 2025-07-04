@@ -2,14 +2,10 @@ name: msdo-secret-scanning-trufflehog
 
 on:
   workflow_call:
-    inputs:
-      branch:
-        required: false
-        type: string
-        default: 'develop'
     secrets:
       GH_TOKEN:
         required: false
+  workflow_dispatch:
 
 jobs:
   trufflehog-scan:
@@ -24,18 +20,19 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.branch }}
+        run: |
+          git clone https://github.com/${{ github.repository }} .
+          git checkout ${{ github.ref_name }}
 
-      - name: Install jq
+      - name: Install jq (if needed)
         run: sudo apt-get install -y jq
 
       - name: Install TruffleHog (v3+ CLI)
         run: |
           echo "Fetching latest TruffleHog release asset for Linux..."
-          ASSET_URL=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/trufflesecurity/trufflehog/releases/latest \
-          | jq -r '.assets[] | select(.name | test("linux_amd64.tar.gz$")) | .browser_download_url')
+
+          ASSET_URL=$(curl -s https://api.github.com/repos/trufflesecurity/trufflehog/releases/latest \
+            | jq -r '.assets[] | select(.name | test("linux_amd64.tar.gz$")) | .browser_download_url')
 
           if [ -z "$ASSET_URL" ]; then
             echo "Could not find Linux binary asset for TruffleHog. Exiting."
@@ -46,6 +43,7 @@ jobs:
           curl -sSL -o trufflehog.tar.gz "$ASSET_URL"
           tar -xzf trufflehog.tar.gz
           chmod +x trufflehog
+          file trufflehog
           sudo mv trufflehog /usr/local/bin/
           trufflehog --version
 
@@ -61,43 +59,6 @@ jobs:
             --json \
             -x exclude-paths.txt \
             > trufflehog-findings.json || true
-
-      - name: Convert TruffleHog findings to SARIF format
-        run: |
-          echo 'import json' > convert_to_sarif.py
-          echo 'try:' >> convert_to_sarif.py
-          echo '  with open("trufflehog-findings.json") as f:' >> convert_to_sarif.py
-          echo '    findings = [json.loads(line) for line in f if line.strip()]' >> convert_to_sarif.py
-          echo 'except Exception as e:' >> convert_to_sarif.py
-          echo '  print("Failed to parse findings:", e)' >> convert_to_sarif.py
-          echo '  findings = []' >> convert_to_sarif.py
-          echo 'sarif = {"version": "2.1.0", "runs": [{"tool": {"driver": {"name": "TruffleHog","informationUri": "https://github.com/trufflesecurity/trufflehog","rules": []}}, "results": []}]}' >> convert_to_sarif.py
-          echo 'seen_rules = set()' >> convert_to_sarif.py
-          echo 'for finding in findings:' >> convert_to_sarif.py
-          echo '  reason = finding.get("reason", "Secret detected")' >> convert_to_sarif.py
-          echo '  path = finding.get("path", "")' >> convert_to_sarif.py
-          echo '  line = finding.get("line", 1)' >> convert_to_sarif.py
-          echo '  strings_found = ", ".join(finding.get("stringsFound", []))' >> convert_to_sarif.py
-          echo '  rule_id = f"trufflehog-{reason.replace(" ", "-")[:64]}"' >> convert_to_sarif.py
-          echo '  if rule_id not in seen_rules:' >> convert_to_sarif.py
-          echo '    sarif["runs"][0]["tool"]["driver"]["rules"].append({"id": rule_id, "name": reason})' >> convert_to_sarif.py
-          echo '    seen_rules.add(rule_id)' >> convert_to_sarif.py
-          echo '  sarif["runs"][0]["results"].append({' >> convert_to_sarif.py
-          echo '    "ruleId": rule_id,' >> convert_to_sarif.py
-          echo '    "level": "warning",' >> convert_to_sarif.py
-          echo '    "message": {"text": f"{reason} in {path} at line {line}: {strings_found}"},' >> convert_to_sarif.py
-          echo '    "locations": [{"physicalLocation": {"artifactLocation": {"uri": path}, "region": {"startLine": line}}}]' >> convert_to_sarif.py
-          echo '  })' >> convert_to_sarif.py
-          echo 'with open("trufflehog.sarif", "w") as out:' >> convert_to_sarif.py
-          echo '  json.dump(sarif, out)' >> convert_to_sarif.py
-
-          python3 convert_to_sarif.py
-
-      - name: Upload SARIF to Microsoft Defender for DevOps
-        uses: microsoft/security-devops-action@preview
-        with:
-          tools: trufflehog
-          arguments: 'guardian upload --file trufflehog.sarif --tool trufflehog'
 
       # Commented out unless we want to use GHAS and store finding in GitHub Security
       # - name: Convert TruffleHog findings to SARIF format
