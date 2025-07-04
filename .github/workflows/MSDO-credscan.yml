@@ -95,7 +95,8 @@ jobs:
           echo "Looking for generated SARIF output..."
           find . -name "*.sarif" || echo "No SARIF file found"
           echo "---"
-          cat ./_msdo/sarif/credscan.sarif || echo "SARIF file not found or empty"
+          echo "Contents of ./.gdn/msdo.sarif:"
+          cat ./.gdn/msdo.sarif || echo "SARIF file not found or empty"
 
       # Commented out unless we want to use GHAS and store finding in GitHub Security
       # - name: Upload SARIF to GitHub Code Scanning
