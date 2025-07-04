@@ -1,17 +1,26 @@
-name: trufflehog-defender-upload
+name: msdo-secret-scanning-trufflehog
 
 on:
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  id-token: write
-  security-events: write
+  workflow_call:
+    inputs:
+      branch:
+        required: false
+        type: string
+        default: 'develop'
+    secrets:
+      GH_TOKEN:
+        required: false
 
 jobs:
-  scan:
-    name: TruffleHog to Defender for DevOps
+  trufflehog-scan:
+    name: TruffleHog Secret Scan
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+      security-events: write
 
     steps:
       - name: Checkout code
