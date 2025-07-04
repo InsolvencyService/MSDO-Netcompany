@@ -35,8 +35,8 @@ jobs:
         run: |
           echo "Fetching latest TruffleHog release asset for Linux..."
 
-          ASSET_URL=$(curl -s https://api.github.com/repos/trufflesecurity/trufflehog/releases/latest \
-            | jq -r '.assets[] | select(.name | test("linux_amd64.tar.gz$")) | .browser_download_url')
+          ASSET_URL=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/trufflesecurity/trufflehog/releases/latest \
+          | jq -r '.assets[] | select(.name | test("linux_amd64.tar.gz$")) | .browser_download_url')
 
           if [ -z "$ASSET_URL" ]; then
             echo "Could not find Linux binary asset for TruffleHog. Exiting."
