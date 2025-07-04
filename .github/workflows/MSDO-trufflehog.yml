@@ -78,7 +78,7 @@ jobs:
           echo '  path = finding.get("path", "")' >> convert_to_sarif.py
           echo '  line = finding.get("line", 1)' >> convert_to_sarif.py
           echo '  strings_found = ", ".join(finding.get("stringsFound", []))' >> convert_to_sarif.py
-          echo '  rule_id = f"trufflehog-{reason.replace(\" \", \"-\")[:64]}"' >> convert_to_sarif.py
+          echo '  rule_id = f"trufflehog-{reason.replace(" ", "-")[:64]}"' >> convert_to_sarif.py
           echo '  if rule_id not in seen_rules:' >> convert_to_sarif.py
           echo '    sarif["runs"][0]["tool"]["driver"]["rules"].append({"id": rule_id, "name": reason})' >> convert_to_sarif.py
           echo '    seen_rules.add(rule_id)' >> convert_to_sarif.py
@@ -90,6 +90,7 @@ jobs:
           echo '  })' >> convert_to_sarif.py
           echo 'with open("trufflehog.sarif", "w") as out:' >> convert_to_sarif.py
           echo '  json.dump(sarif, out)' >> convert_to_sarif.py
+
           python3 convert_to_sarif.py
 
       - name: Install Microsoft Security DevOps CLI
