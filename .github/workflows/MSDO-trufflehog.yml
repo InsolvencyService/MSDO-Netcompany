@@ -28,7 +28,7 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
 
-      - name: Install jq (if needed)
+      - name: Install jq
         run: sudo apt-get install -y jq
 
       - name: Install TruffleHog (v3+ CLI)
@@ -93,22 +93,26 @@ jobs:
 
           python3 convert_to_sarif.py
 
-      - name: Install Microsoft Security DevOps CLI (msdo)
+      - name: Install .NET and Microsoft Security DevOps CLI
         run: |
+          echo "Installing .NET SDK..."
+          wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+          chmod +x dotnet-install.sh
+          ./dotnet-install.sh --version 6.0.415 --install-dir "$HOME/dotnet"
+          echo "$HOME/dotnet" >> $GITHUB_PATH
+          echo "DOTNET_ROOT=$HOME/dotnet" >> $GITHUB_ENV
+          export PATH="$HOME/dotnet:$PATH"
+
           echo "Installing Microsoft Security DevOps CLI..."
-          curl -sSL https://aka.ms/msdo-cli/latest/linux-x64 -o msdo
-          chmod +x msdo
-          mkdir -p msdo-cli
-          mv msdo msdo-cli/msdo
-          echo "$(pwd)/msdo-cli" >> $GITHUB_PATH
+          $HOME/dotnet/dotnet new tool-manifest
+          $HOME/dotnet/dotnet tool install microsoft.security.devops.cli --version 0.215.0
 
       - name: Import and Upload SARIF to Microsoft Defender for DevOps
         run: |
           mkdir -p .gdn
           echo '{}' > .gdn/.gdnsettings
-          msdo guardian import --tool trufflehog --file trufflehog.sarif
-          msdo guardian upload --github
-
+          $HOME/dotnet/dotnet msdo guardian import --tool trufflehog --file trufflehog.sarif
+          $HOME/dotnet/dotnet msdo guardian upload --github
       # Commented out unless we want to use GHAS and store finding in GitHub Security
       # - name: Convert TruffleHog findings to SARIF format
       #   if: github.repository_visibility == 'public'
