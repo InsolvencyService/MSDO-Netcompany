@@ -60,6 +60,6 @@ jobs:
       id-token: write
       actions: read
       security-events: write
-    needs: secret-scan-credscan
+    needs: secret-scan-trufflehog
     secrets:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
