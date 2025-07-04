@@ -35,9 +35,8 @@ jobs:
       - name: Install TruffleHog (v3+ CLI)
         run: |
           echo "Fetching latest TruffleHog release asset for Linux..."
-
-          ASSET_URL=$(curl -s https://api.github.com/repos/trufflesecurity/trufflehog/releases/latest \
-            | jq -r '.assets[] | select(.name | test("linux_amd64.tar.gz$")) | .browser_download_url')
+          ASSET_URL=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/trufflesecurity/trufflehog/releases/latest \
+          | jq -r '.assets[] | select(.name | test("linux_amd64.tar.gz$")) | .browser_download_url')
 
           if [ -z "$ASSET_URL" ]; then
             echo "Could not find Linux binary asset for TruffleHog. Exiting."
@@ -48,7 +47,6 @@ jobs:
           curl -sSL -o trufflehog.tar.gz "$ASSET_URL"
           tar -xzf trufflehog.tar.gz
           chmod +x trufflehog
-          file trufflehog
           sudo mv trufflehog /usr/local/bin/
           trufflehog --version
 
