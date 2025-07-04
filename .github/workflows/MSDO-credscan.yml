@@ -54,7 +54,7 @@ jobs:
                 "parameters": {
                   "scanUnknownExtensions": true,
                   "scanAllFiles": true,
-                  "severity": "note"
+                  "severity": "low"
                 }
               }
             },
@@ -86,6 +86,7 @@ jobs:
         id: msdo
         with:
           tools: ${{ env.TOOLS }}
+          policy: ""
         env:
           GDN_LOGLEVEL: debug # Set to 'debug' for detailed logs, can be set to 'info' or 'error' for less verbosity
           ACTIONS_STEP_DEBUG: true # Enable step debug logging
