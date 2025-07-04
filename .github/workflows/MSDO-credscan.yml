@@ -54,7 +54,7 @@ jobs:
                 "parameters": {
                   "scanUnknownExtensions": true,
                   "scanAllFiles": true,
-                  "severity": "low"
+                  "severity": "note"
                 }
               }
             },
@@ -81,6 +81,12 @@ jobs:
           echo "DOTNET_ROOT=$HOME/dotnet" >> $GITHUB_ENV
           echo "$HOME/dotnet" >> $GITHUB_PATH
 
+      - name: Debug .gdn/.gdnsettings
+        run: |
+          echo "====== .gdn/.gdnsettings ======"
+          cat .gdn/.gdnsettings || echo "Missing"
+          echo "================================"
+
       - name: Run Microsoft Security DevOps - Secret Scan
         uses: InsolvencyService/MSDO-Netcompany/security-devops-action@main
         id: msdo
@@ -90,6 +96,7 @@ jobs:
         env:
           GDN_LOGLEVEL: debug # Set to 'debug' for detailed logs, can be set to 'info' or 'error' for less verbosity
           ACTIONS_STEP_DEBUG: true # Enable step debug logging
+          DISABLE_GUARDIAN_INIT: true # Stops GDNSETTING file from being deleted and regenerated
 
       - name: Show SARIF output for debugging
         run: |
