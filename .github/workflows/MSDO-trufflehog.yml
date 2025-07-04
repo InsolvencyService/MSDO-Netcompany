@@ -96,10 +96,10 @@ jobs:
       - name: Install Microsoft Security DevOps CLI (msdo)
         run: |
           echo "Installing Microsoft Security DevOps CLI..."
-          curl -sSL https://aka.ms/msdo-cli/latest/linux-x64 -o msdo.tar.gz
-          mkdir msdo-cli
-          tar -xzf msdo.tar.gz -C msdo-cli
-          chmod +x msdo-cli/msdo
+          curl -sSL https://aka.ms/msdo-cli/latest/linux-x64 -o msdo
+          chmod +x msdo
+          mkdir -p msdo-cli
+          mv msdo msdo-cli/msdo
           echo "$(pwd)/msdo-cli" >> $GITHUB_PATH
 
       - name: Import and Upload SARIF to Microsoft Defender for DevOps
