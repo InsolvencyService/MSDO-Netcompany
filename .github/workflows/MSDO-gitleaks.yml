@@ -60,6 +60,25 @@ jobs:
           --report-path=gitleaks.sarif \
           --exit-code 0
 
+      - name: Install .NET & MSDO CLI
+        run: |
+          wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+          chmod +x dotnet-install.sh
+          ./dotnet-install.sh --version 6.0.415 --install-dir "$HOME/dotnet"
+          echo "DOTNET_ROOT=$HOME/dotnet" >> $GITHUB_ENV
+          echo "$HOME/dotnet" >> $GITHUB_PATH
+
+          # Install MSDO CLI
+          $HOME/dotnet/dotnet tool install --tool-path . microsoft.security.devops.cli
+
+      - name: Import & Upload SARIF to Microsoft Defender for DevOps
+        run: |
+          echo "{}" > .gdn/.gdnsettings
+          mkdir -p .gdn
+
+          ./msdo guardian import --tool gitleaks --file gitleaks.sarif
+          ./msdo guardian upload --github
+
       # Commented out unless we want to use GHAS and store finding in GitHub Security
       # - name: Upload SARIF to GitHub Code Scanning
       #   if: github.repository_visibility == 'public'

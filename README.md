@@ -61,4 +61,5 @@ It is designed for organizations with restricted environments.<br>
 <br>
 - Results are uploaded to <strong>GitHub Code Scanning Alerts</strong>. This has been commented out, but can be re-enabled if needed.<br>
 - Results are ingested into <strong>Microsoft Defender for Cloud's DevOps Security</strong><br>
+- Results will appear under <strong>"Recommendations"</strong> with a Severity of <strong>"HIGH"</strong> and a Status of <strong>"N/A - Unspecified"</strong>
 <br>
