@@ -62,7 +62,7 @@ jobs:
               "policies": [
                 {
                   "tool": "credscan",
-                  "minimumSeverity": "note"
+                  "minimumSeverity": "low"
                 }
               ]
             }
