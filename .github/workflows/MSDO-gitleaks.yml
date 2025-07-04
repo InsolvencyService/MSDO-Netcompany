@@ -23,28 +23,18 @@ jobs:
       security-events: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.branch }}
+      - name: Checkout repository manually
+        run: |
+          git clone https://github.com/${{ github.repository }} .
+          git checkout ${{ github.ref_name }}
 
       - name: Fetch Gitleaks config from MSDO
+      #This section will need to be edited to match wherever the repo will be copied to
         run: |
-            echo "Downloading .gitleaks.toml using GitHub API..."
-            curl -sSL -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
-                 -H "Accept: application/vnd.github.v3.raw" \
-                 -L \
-                 https://api.github.com/repos/InsolvencyService/MSDO-Netcompany/contents/.github/gitleaks.toml?ref=main \
-                 -o .gitleaks.toml
-
-      - name: Show gitleaks config
-        run: |
-          echo "Gitleaks config contents:"
-          head .gitleaks.toml
+          echo "Fetching .gitleaks.toml from MSDO repo..."
+          curl -sSL https://raw.githubusercontent.com/theangrytech-git/MSDO/main/gitleaks.toml -o .gitleaks.toml
 
       - name: Run Gitleaks
-        env:
-          ACTIONS_STEP_DEBUG: true
         run: |
           echo "Downloading Gitleaks..."
           curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz -o gitleaks.tar.gz
@@ -59,25 +49,6 @@ jobs:
           --report-format sarif \
           --report-path=gitleaks.sarif \
           --exit-code 0
-
-      - name: Install .NET & MSDO CLI
-        run: |
-          wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
-          chmod +x dotnet-install.sh
-          ./dotnet-install.sh --version 6.0.415 --install-dir "$HOME/dotnet"
-          echo "DOTNET_ROOT=$HOME/dotnet" >> $GITHUB_ENV
-          echo "$HOME/dotnet" >> $GITHUB_PATH
-
-          # Install MSDO CLI
-          $HOME/dotnet/dotnet tool install --tool-path . microsoft.security.devops.cli
-
-      - name: Import & Upload SARIF to Microsoft Defender for DevOps
-        run: |
-          echo "{}" > .gdn/.gdnsettings
-          mkdir -p .gdn
-
-          ./msdo guardian import --tool gitleaks --file gitleaks.sarif
-          ./msdo guardian upload --github
 
       # Commented out unless we want to use GHAS and store finding in GitHub Security
       # - name: Upload SARIF to GitHub Code Scanning
