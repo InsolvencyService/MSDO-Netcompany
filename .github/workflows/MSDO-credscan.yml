@@ -54,7 +54,7 @@ jobs:
                 "parameters": {
                   "scanUnknownExtensions": true,
                   "scanAllFiles": true,
-                  "severity": "low"
+                  "severity": "note"
                 }
               }
             },
@@ -62,7 +62,7 @@ jobs:
               "policies": [
                 {
                   "tool": "credscan",
-                  "minimumSeverity": "low"
+                  "minimumSeverity": "note"
                 }
               ]
             }
