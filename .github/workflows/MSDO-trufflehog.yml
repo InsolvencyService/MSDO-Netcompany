@@ -96,18 +96,18 @@ jobs:
       - name: Install Microsoft Security DevOps CLI (msdo)
         run: |
           echo "Installing Microsoft Security DevOps CLI..."
-          curl -sSL https://aka.ms/msdo/linux-x64 -o msdo
-          chmod +x msdo
-          mkdir -p msdo-bin
-          mv msdo msdo-bin/msdo
-          echo "$(pwd)/msdo-bin" >> $GITHUB_PATH
+          curl -sSL https://aka.ms/msdo-cli/latest/linux-x64 -o msdo.tar.gz
+          mkdir msdo-cli
+          tar -xzf msdo.tar.gz -C msdo-cli
+          chmod +x msdo-cli/msdo
+          echo "$(pwd)/msdo-cli" >> $GITHUB_PATH
 
       - name: Import and Upload SARIF to Microsoft Defender for DevOps
         run: |
           mkdir -p .gdn
           echo '{}' > .gdn/.gdnsettings
-          ./msdo-bin/msdo guardian import --tool trufflehog --file trufflehog.sarif
-          ./msdo-bin/msdo guardian upload --github
+          msdo guardian import --tool trufflehog --file trufflehog.sarif
+          msdo guardian upload --github
 
       # Commented out unless we want to use GHAS and store finding in GitHub Security
       # - name: Convert TruffleHog findings to SARIF format
