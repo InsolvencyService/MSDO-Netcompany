@@ -93,17 +93,12 @@ jobs:
 
           python3 convert_to_sarif.py
 
-      - name: Install Microsoft Security DevOps CLI
-        run: |
-          curl -sSL https://aka.ms/msdo/install | bash
-          echo "$HOME/.msdo" >> $GITHUB_PATH
+      - name: Upload SARIF to Microsoft Defender for DevOps
+        uses: microsoft/security-devops-action@preview
+        with:
+          tools: trufflehog
+          arguments: 'guardian upload --file trufflehog.sarif --tool trufflehog'
 
-      - name: Import and Upload SARIF to Microsoft Defender for DevOps
-        run: |
-          mkdir -p .gdn
-          echo '{}' > .gdn/.gdnsettings
-          msdo guardian import --tool trufflehog --file trufflehog.sarif
-          msdo guardian upload --github
       # Commented out unless we want to use GHAS and store finding in GitHub Security
       # - name: Convert TruffleHog findings to SARIF format
       #   if: github.repository_visibility == 'public'
