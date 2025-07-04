@@ -98,6 +98,17 @@ jobs:
           ACTIONS_STEP_DEBUG: true # Enable step debug logging
           DISABLE_GUARDIAN_INIT: true # Stops GDNSETTING file from being deleted and regenerated
 
+      # Secret Scans are showing as Sev: 40, so low and closed as completed. Below will mark them as Medium severity for investigation
+      - name: Elevate Low severity to Medium in SARIF
+        run: |
+          if [ -f .gdn/msdo.sarif ]; then
+            jq '(.runs[].results[] | select(.properties.Severity >= 40 and .properties.Severity < 60) | .properties.Severity) |= 60' .gdn/msdo.sarif > elevated.sarif
+            mv elevated.sarif .gdn/msdo.sarif
+            echo "Elevated Low severities to Medium."
+          else
+            echo "SARIF file not found. Skipping severity elevation."
+          fi
+
       - name: Show SARIF output for debugging
         run: |
           echo "Looking for generated SARIF output..."
