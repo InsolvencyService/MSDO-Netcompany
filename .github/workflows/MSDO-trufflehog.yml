@@ -96,7 +96,7 @@ jobs:
       - name: Install Microsoft Security DevOps CLI (msdo)
         run: |
           echo "Installing Microsoft Security DevOps CLI..."
-          curl -sSL https://aka.ms/msdo-cli/latest/linux-x64 -o msdo
+          curl -sSL https://aka.ms/msdo/linux-x64 -o msdo
           chmod +x msdo
           mkdir -p msdo-bin
           mv msdo msdo-bin/msdo
