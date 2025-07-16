@@ -102,7 +102,7 @@ jobs:
       - name: Elevate Low severity to Medium in SARIF
         run: |
           if [ -f .gdn/msdo.sarif ]; then
-            jq '(.runs[].results[] | select(.properties.Severity < 60) | .properties.Severity) |= 60' .gdn/msdo.sarif > elevated.sarif
+            jq '(.runs[].results[] | select(.properties.Severity < 60) | .properties.Severity) |= 90' .gdn/msdo.sarif > elevated.sarif
             mv elevated.sarif .gdn/msdo.sarif
             echo "Elevated Low severities to Medium."
           else
